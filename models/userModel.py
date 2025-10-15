@@ -1,9 +1,13 @@
 from pydantic import BaseModel
 from datetime import date
+from typing import List
+from models.reserveModel import ReserveModel
+from typing import TYPE_CHECKING
 
-from entities.user import User
+if TYPE_CHECKING:
+    from entities.user import User
 
-class FriendModel(BaseException):
+class FriendModel(BaseModel):
     id: int
     name: str
     surname: str
@@ -25,10 +29,10 @@ class FullUserModel(BaseModel): # this will also be used for update the user
     balance: int
     birthdate: date
     email: str
-    # reserves TODO
-    friends: list[FriendModel]
+    reserves: List[ReserveModel]
+    friends: List[FriendModel]
 
-    def to_entity(self):
+    def to_entity(self) -> "User":
         return User(
             self.id,
             self.name,
@@ -37,7 +41,7 @@ class FullUserModel(BaseModel): # this will also be used for update the user
             self.balance,
             self.birthdate,
             self.email,
-            #self.reserves, TODO
+            self.reserves,
             self.friends)
 
 class UserResponse(BaseModel):

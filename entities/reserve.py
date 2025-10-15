@@ -5,6 +5,7 @@ from databases.database import PostgresBase
 from datetime import date
 
 from entities.user import User
+from models.reserveModel import ReserveModel
 
 class Reserve(PostgresBase):
     __tablename__ = "reserves"
@@ -18,7 +19,7 @@ class Reserve(PostgresBase):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    user = relationship("User", back_populates="reserves", lazy="select")
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
     lodgment_id = Column(String, nullable=False)
 
@@ -32,4 +33,10 @@ class Reserve(PostgresBase):
         return any(
             (self.start_date <= other.end_date and self.end_date >= other.start_date)
             for other in reserves
+        )
+    
+    def to_reserve_model(self) -> ReserveModel:
+        return ReserveModel(
+            self.start_date,
+            self.end_date
         )

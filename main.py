@@ -1,9 +1,12 @@
+import pkgutil
+import importlib
 from fastapi import FastAPI
 from databases.database import postgres_engine, PostgresBase
 from fastapi.middleware.cors import CORSMiddleware
 import entities
 
-
+for _, module_name, _ in pkgutil.iter_modules(entities.__path__):
+    importlib.import_module(f"entities.{module_name}")
 
 app = FastAPI()
 

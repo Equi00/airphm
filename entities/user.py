@@ -10,7 +10,7 @@ user_friends = Table(
     "user_friends", # table name
     PostgresBase.metadata, # metadata
     Column("user_id", Integer, ForeignKey("user.id"), primary_key=True),
-    Column("frind_id", Integer, ForeignKey("user.id"), primary_key=True)
+    Column("friend_id", Integer, ForeignKey("user.id"), primary_key=True)
 
 )
 
@@ -37,7 +37,7 @@ class User(PostgresBase):
     birthdate = Column(Date, default=date.today())
 
     # when a user is deleted, all the reserves are deleted.
-    reserves = relationship("Reserve", back_populates="user", cascade="all, delete-orphan", lazy="select")
+    reserves = relationship("Reserve", back_populates=None, cascade="all, delete-orphan", lazy="select")
 
     friends = relationship(
         "User",
@@ -100,8 +100,8 @@ class User(PostgresBase):
             balance = self.balance,
             birthdate = self.birthdate,
             email = self.email,
-            #reserves = self.reserves, TODO
-            friends = [self.friend.to_friend_dto() for friend in self.friends]
+            reserves = [self.reserve.to_reserve_model() for reserve in self.reserves],
+            friends = [self.friend.to_friend_model() for friend in self.friends]
         )
     
     def to_friend_model(self) -> FriendModel:
@@ -114,7 +114,14 @@ class User(PostgresBase):
     def to_response(self) -> UserResponse:
         return UserResponse(id = self.id, name = self.name)
     
-    #def has_overlapped_reserves() TODO
+    def has_overlapped_reserves(self) -> bool:
+        if len(self.reserves) > 0:
+            for reserve in self.reserves:
+                remaining = [r for r in self.reserves if r != reserve]
+                if reserve.overlaps(remaining): 
+                    return True
+        else: 
+            return False
 
     #def _can_reserve() TODO
         
