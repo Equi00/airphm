@@ -21,6 +21,8 @@ class Reserve(PostgresBase):
 
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
+    user = relationship("User", back_populates="reserves")
+
     lodgment_id = Column(String, nullable=False)
 
     start_date = Column(Date, nullable=False)
@@ -37,6 +39,6 @@ class Reserve(PostgresBase):
     
     def to_reserve_model(self) -> ReserveModel:
         return ReserveModel(
-            self.start_date,
-            self.end_date
+            start_date=self.start_date,
+            end_date=self.end_date
         )

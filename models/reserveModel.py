@@ -3,9 +3,8 @@ from datetime import date
 from typing import List
 
 class ReserveModel(BaseModel):
-    def __init__(self, start_date: date, end_date: date):
-        self.start_date = start_date
-        self.end_date = end_date
+    start_date: date
+    end_date: date
 
     def overlaps(self, reserves: List["ReserveModel"]) -> bool:
         return any(

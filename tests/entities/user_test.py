@@ -1,15 +1,23 @@
-from databases.database import PostgresBase, PostgresSessionLocal, postgres_engine
+from databases.database import PostgresBase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from datetime import date
+from dateutil.relativedelta import relativedelta
 from entities.user import User
+from models.userModel import UserModel, FriendModel, UserResponse, FullUserModel
 from entities.reserve import Reserve
 import pytest
 
+DATABASE_URL = "sqlite:///:memory:"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
 @pytest.fixture(scope="function")
 def session():
-    """Create a clean sessio for each test."""
+    """Create a clean session for each test."""
 
-    PostgresBase.metadata.create_all(bind=postgres_engine)
-    db_session = PostgresSessionLocal()
+    PostgresBase.metadata.create_all(bind=engine)
+    db_session = SessionLocal()
 
     try:
         yield db_session
@@ -19,7 +27,7 @@ def session():
 
         db_session.close()
 
-        PostgresBase.metadata.drop_all(bind=postgres_engine)
+        PostgresBase.metadata.drop_all(bind=engine)
 
 def test_create_user(session):
     user = User(
@@ -38,3 +46,236 @@ def test_create_user(session):
     assert user_db is not None
     assert user_db.name == "Ezequiel"
     assert user_db.balance == 300
+
+def test_add_friend(session):
+    user1 = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    user2 = User(
+        name="Jorge",
+        surname="Lampara",
+        country="Chile",
+        balance=0,
+        birthdate=date(2010, 7, 18)
+    )
+
+    session.add_all([user1,user2])
+    session.commit()
+
+    user1.add_friend(user2)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    assert user2 in user1.friends
+    assert user_db.is_friend(user2)
+
+def test_remove_friend(session):
+    user1 = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    user2 = User(
+        name="Jorge",
+        surname="Lampara",
+        country="Chile",
+        balance=0,
+        birthdate=date(2010, 7, 18)
+    )
+
+    session.add_all([user1,user2])
+    session.commit()
+
+    user1.add_friend(user2)
+    session.commit()
+
+    user1.remove_friend(user2)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    assert user2 not in user1.friends
+    assert not user_db.is_friend(user2)
+
+def test_age_calculation():
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    assert user.age() == 25
+
+def test_is_valid_user_true():
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    assert user.is_valid() is True
+
+def test_is_valid_user_false():
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    assert user.is_valid() is False
+
+def test_recharge_balance(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    session.add(user)
+    session.commit()
+
+    user.recharge(50)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    assert user_db.balance == 350
+
+def test_to_user_model(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    user.email = "somethin@gmail.com"
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    user_model = user_db.to_user_Model()
+
+    assert isinstance(user_model, UserModel)
+
+def test_to_friend_model(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    user_model = user_db.to_friend_model()
+
+    assert isinstance(user_model, FriendModel)
+
+def test_to_response_model(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    user_model = user_db.to_response()
+
+    assert isinstance(user_model, UserResponse)
+
+def test_to_update_model(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+    user_model = user_db.to_update_model()
+
+    assert isinstance(user_model, FullUserModel)
+
+def test_has_overlapped_reserves_false():
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    assert user.has_overlapped_reserves() is False
+
+def test_has_overlapped_reserves_true():
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    reserve1 = Reserve(
+        user=user, 
+        lodgment_id="232344",
+        start_date=(date.today() - relativedelta(days=10)),
+        end_date=date.today(),
+        cost=200)
+    
+    reserve2 = Reserve(
+        user=user, 
+        lodgment_id="55555",
+        start_date=(date.today() - relativedelta(days=5)),
+        end_date=date.today(),
+        cost=200)
+    
+    user.reserves = [reserve1, reserve2]
+
+    assert user.has_overlapped_reserves() is True

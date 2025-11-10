@@ -37,7 +37,7 @@ class User(PostgresBase):
     birthdate = Column(Date, default=date.today())
 
     # when a user is deleted, all the reserves are deleted.
-    reserves = relationship("Reserve", back_populates=None, cascade="all, delete-orphan", lazy="select")
+    reserves = relationship("Reserve", back_populates="user", cascade="all, delete-orphan", lazy="select")
 
     friends = relationship(
         "User",
@@ -55,14 +55,14 @@ class User(PostgresBase):
     # rateLodgment TODO
 
     def recharge(self, cash: int):
-        balance += cash
+        self.balance += cash
 
     def add_friend(self, user: "User"):
-        if not self.isFriend(user):
+        if not self.is_friend(user):
             self.friends.append(user)
 
     def remove_friend(self, user: "User"):
-        if self.isFriend(user):
+        if self.is_friend(user):
             self.friends.remove(user)
 
     def is_friend(self, user: "User") -> bool:
@@ -72,15 +72,15 @@ class User(PostgresBase):
         return relativedelta(date.today(), self.birthdate).years
     
     def is_valid(self) -> bool:
-        return all[
+        return all([
             self.name.strip(),
             self.surname.strip(),
             self.country.strip(),
             self.balance >= 0,
             self.age() >= 18
-        ]
+        ])
 
-    def user_to_Model(self) -> UserModel:
+    def to_user_Model(self) -> UserModel:
         return UserModel(
             id = self.id,
             name = self.name,
