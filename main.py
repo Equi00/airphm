@@ -1,7 +1,7 @@
 import pkgutil
 import importlib
 from fastapi import FastAPI
-from databases.database import postgres_engine, PostgresBase
+from databases.sql_database import postgres_engine, PostgresBase
 from fastapi.middleware.cors import CORSMiddleware
 import entities
 

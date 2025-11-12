@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import relationship
-from databases.database import PostgresBase
+from databases.sql_database import PostgresBase
 
 from datetime import date
 

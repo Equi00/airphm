@@ -1,0 +1,1 @@
+URL_DATABASE_MONGO = "mongodb://mongo:mongo@localhost:27017/AirphmAppMongo?authSource=AirphmAppMongo"

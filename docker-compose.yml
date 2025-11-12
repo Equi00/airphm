@@ -25,6 +25,16 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
+  mongodb:
+    image: mongo:latest
+    container_name: airphm_mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb:/data/db
+
 volumes:
   db:
   pgadmin-data:
+  mongodb:

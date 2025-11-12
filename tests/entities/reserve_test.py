@@ -1,4 +1,4 @@
-from databases.database import PostgresBase
+from databases.sql_database import PostgresBase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import date
