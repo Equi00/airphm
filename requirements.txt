@@ -6,3 +6,4 @@ pytest
 sqlalchemy
 typing
 uuid
+pymongo
