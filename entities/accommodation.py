@@ -12,31 +12,31 @@ class Accommodation(BaseModel, ABC):
     id: str | None = None
     type: str
 
-    ownerId: int
-    baseCost: int
+    owner_id: int
+    base_cost: int
     name: str
     description: str
     capacity: int
     bedrooms: int
     bathrooms: int
-    accommodationDetail: str
-    otherAspects: str
-    cleaningService: bool
+    accommodation_detail: str
+    other_aspects: str
+    cleaning_service: bool
     address: str
     country: str
-    imageUrl: str
+    image_url: str
 
     reserves: List[ReserveModel] = []
     commission: float = 1.05
-    rateAverage: float = 0.0
-    rateCount: int = 0
+    rate_average: float = 0.0
+    rate_count: int = 0
 
     @abstractmethod
     def plus(self) -> int:
         pass
 
     def total_cost(self) -> int:
-        return ceil((self.baseCost + self.plus()) * self.commission)
+        return ceil((self.base_cost + self.plus()) * self.commission)
 
     def has_overlapped_reserves(self) -> bool:
         if len(self.reserves) <= 1:
@@ -49,22 +49,22 @@ class Accommodation(BaseModel, ABC):
         return False
 
     def is_valid(self) -> bool:
-        return (
-            self.baseCost > 0
+        return bool(
+            self.base_cost > 0
             and self.name.strip()
             and self.description.strip()
             and self.capacity > 0
             and self.bedrooms > 0
             and self.bathrooms > 0
-            and self.accommodationDetail.strip()
-            and self.otherAspects.strip()
+            and self.accommodation_detail.strip()
+            and self.other_aspects.strip()
             and self.address.strip()
             and self.country.strip()
-            and self.imageUrl.strip()
+            and self.image_url.strip()
             and not self.has_overlapped_reserves()
         )
     
-    def to_detail_dto(self, rates: list[RateData]) -> AccommodationDetailModel:
+    def to_detail_model(self, rates: list[RateData]) -> AccommodationDetailModel:
         return AccommodationDetailModel(
             id=self.id,
             owner_id=self.owner_id,
@@ -86,7 +86,7 @@ class Accommodation(BaseModel, ABC):
                     rate_score=rate.rate_score,
                     commentary=rate.commentary,
                     user=rate.user_id,
-                    date=rate.date
+                    rate_date=rate.rate_date
                 )
                 for rate in rates
             ],
@@ -100,7 +100,7 @@ class Hut(Accommodation):
     type: Literal["Hut"] = "Hut"
 
     def plus(self) -> int:
-        return 10000 if self.cleaningService else 0
+        return 10000 if self.cleaning_service else 0
     
 class House(Accommodation):
     type: Literal["House"] = "House"

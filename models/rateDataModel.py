@@ -14,4 +14,4 @@ class RateDataCommentModel(BaseModel):
     score: int
     commentary: str
     user: UserModel
-    date: date
+    rate_date: date

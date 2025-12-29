@@ -7,8 +7,8 @@ from dateutil.relativedelta import relativedelta
 from models.userModel import FriendModel, FullUserModel, UserModel, UserResponse
 
 user_friends = Table(
-    "user_friends", # table name
-    PostgresBase.metadata, # metadata
+    "user_friends",
+    PostgresBase.metadata,
     Column("user_id", Integer, ForeignKey("user.id"), primary_key=True),
     Column("friend_id", Integer, ForeignKey("user.id"), primary_key=True)
 
@@ -36,7 +36,6 @@ class User(PostgresBase):
 
     birthdate = Column(Date, default=date.today())
 
-    # when a user is deleted, all the reserves are deleted.
     reserves = relationship("Reserve", back_populates="user", cascade="all, delete-orphan", lazy="select")
 
     friends = relationship(
