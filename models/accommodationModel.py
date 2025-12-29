@@ -21,7 +21,7 @@ class AccommodationDetailModel(BaseModel):
     country: str
     image_url: str
     reserves: List[ReserveModel]
-    rate: List[RateDataCommentModel]
+    rates: List[RateDataCommentModel]
     rate_average: float
     rate_count: int
     commission: float

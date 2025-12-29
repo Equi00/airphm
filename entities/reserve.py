@@ -10,9 +10,9 @@ from models.reserveModel import ReserveModel
 class Reserve(PostgresBase):
     __tablename__ = "reserves"
 
-    def __init__(self, user: User, lodgment_id: str, start_date: date, end_date: date, cost: int):
+    def __init__(self, user: User, accommodation_id: str, start_date: date, end_date: date, cost: int):
         self.user = user
-        self.lodgment_id = lodgment_id
+        self.accommodation_id = accommodation_id
         self.start_date = start_date
         self.end_date = end_date
         self.cost = cost
@@ -23,7 +23,7 @@ class Reserve(PostgresBase):
 
     user = relationship("User", back_populates="reserves")
 
-    lodgment_id = Column(String, nullable=False)
+    accommodation_id = Column(String, nullable=False)
 
     start_date = Column(Date, nullable=False)
 
@@ -39,6 +39,7 @@ class Reserve(PostgresBase):
     
     def to_reserve_model(self) -> ReserveModel:
         return ReserveModel(
+            id=self.id,
             start_date=self.start_date,
             end_date=self.end_date
         )

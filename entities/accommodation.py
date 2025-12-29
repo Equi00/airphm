@@ -81,11 +81,11 @@ class Accommodation(BaseModel, ABC):
             country=self.country,
             image_url=self.image_url,
             reserves=self.reserves,
-            rate=[
+            rates=[
                 RateDataCommentModel(
                     rate_score=rate.rate_score,
                     commentary=rate.commentary,
-                    user=rate.user_id,
+                    user=rate.user_rate.to_user_model(),
                     rate_date=rate.rate_date
                 )
                 for rate in rates
@@ -95,6 +95,11 @@ class Accommodation(BaseModel, ABC):
             commission=self.commission,
             type=self.__class__.__name__
         )
+    
+    def to_mongo(self) -> dict:
+        data = self.model_dump()
+        data["reserves"] = [r.to_mongo() for r in self.reserves]
+        return data
     
 class Hut(Accommodation):
     type: Literal["Hut"] = "Hut"

@@ -45,7 +45,7 @@ def test_create_reserve(session):
 
     reserve = Reserve(
         user=user_db,
-        lodgment_id="L123",
+        accommodation_id="L123",
         start_date=date.today(),
         end_date=date.today() + relativedelta(days=5),
         cost=200
@@ -57,7 +57,7 @@ def test_create_reserve(session):
     reserve_db = session.query(Reserve).first()
 
     assert reserve_db is not None
-    assert reserve_db.lodgment_id == "L123"
+    assert reserve_db.accommodation_id == "L123"
     assert reserve_db.start_date == date.today()
     assert reserve_db.end_date == date.today() + relativedelta(days=5)
     assert reserve_db.cost == 200
@@ -86,41 +86,105 @@ def test_overlaps_multiple_reserves():
     assert r1.overlaps([r2, r3]) is True
 
 
-def test_to_reserve_model():
-    reserve = Reserve(None, "X1", date.today(), date.today() + relativedelta(days=5), 50)
-    reserve_model = reserve.to_reserve_model()
+def test_to_reserve_model(session):
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    session.add(user)
+    session.commit()
+    
+    reserve = Reserve(user, "X1", date.today(), date.today() + relativedelta(days=5), 50)
+    
+    session.add(reserve)
+    session.commit()
+
+    reserve_db = session.query(Reserve).filter_by(accommodation_id="X1").first()
+    
+    reserve_model = reserve_db.to_reserve_model()
 
     assert isinstance(reserve_model, ReserveModel)
 
 
-def test_overlaps_reserve_model_true():
-    r1 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=5), 100)
-    r2 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=15), 100)
+def test_overlaps_reserve_model_true(session):
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
 
-    rm1 = r1.to_reserve_model()
-    rm2 = r2.to_reserve_model()
+    session.add(user)
+    session.commit()
+    
+    r1 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=5), 100)
+    r2 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=15), 100)
+
+    session.add_all([r1,r2])
+    session.commit()
+
+    reserve_db = session.query(Reserve).filter_by(accommodation_id="A1").all()
+
+    rm1 = reserve_db[0].to_reserve_model()
+    rm2 = reserve_db[1].to_reserve_model()
 
     assert rm1.overlaps([rm2]) is True
 
 
-def test_overlaps_reserve_model_false():
-    r1 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=5), 100)
-    r2 = Reserve(None, "A1", date.today() + relativedelta(days=10), date.today() + relativedelta(days=15), 100)
+def test_overlaps_reserve_model_false(session):
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
 
+    session.add(user)
+    session.commit()
 
-    rm1 = r1.to_reserve_model()
-    rm2 = r2.to_reserve_model()
+    r1 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=5), 100)
+    r2 = Reserve(user, "A1", date.today() + relativedelta(days=10), date.today() + relativedelta(days=15), 100)
+
+    session.add_all([r1,r2])
+    session.commit()
+
+    reserve_db = session.query(Reserve).filter_by(accommodation_id="A1").all()
+
+    rm1 = reserve_db[0].to_reserve_model()
+    rm2 = reserve_db[1].to_reserve_model()
 
     assert rm1.overlaps([rm2]) is False
 
 
-def test_overlaps_multiple_reserves_reserve_model():
-    r1 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=5), 100)
-    r2 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=10), 100)
-    r3 = Reserve(None, "A1", date.today(), date.today() + relativedelta(days=15), 100)
+def test_overlaps_multiple_reserves_reserve_model(session):
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
 
-    rm1 = r1.to_reserve_model()
-    rm2 = r2.to_reserve_model()
-    rm2 = r2.to_reserve_model()
+    session.add(user)
+    session.commit()
 
-    assert rm1.overlaps([rm2, rm2]) is True
+    r1 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=5), 100)
+    r2 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=10), 100)
+    r3 = Reserve(user, "A1", date.today(), date.today() + relativedelta(days=15), 100)
+
+    session.add_all([r1,r2,r3])
+    session.commit()
+
+    reserve_db = session.query(Reserve).filter_by(accommodation_id="A1").all()
+
+    rm1 = reserve_db[0].to_reserve_model()
+    rm2 = reserve_db[1].to_reserve_model()
+    rm3 = reserve_db[2].to_reserve_model()
+
+    assert rm1.overlaps([rm2, rm3]) is True

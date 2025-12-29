@@ -38,6 +38,8 @@ class User(PostgresBase):
 
     reserves = relationship("Reserve", back_populates="user", cascade="all, delete-orphan", lazy="select")
 
+    rates = relationship("RateData", back_populates="user_rate", cascade="all, delete-orphan", lazy="select")
+
     friends = relationship(
         "User",
         secondary=user_friends, 
@@ -79,7 +81,7 @@ class User(PostgresBase):
             self.age() >= 18
         ])
 
-    def to_user_Model(self) -> UserModel:
+    def to_user_model(self) -> UserModel:
         return UserModel(
             id = self.id,
             name = self.name,

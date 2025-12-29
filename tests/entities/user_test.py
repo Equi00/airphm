@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from entities.user import User
+from entities.rateData import RateData
 from models.userModel import UserModel, FriendModel, UserResponse, FullUserModel
 from entities.reserve import Reserve
 import pytest
@@ -179,7 +180,7 @@ def test_to_user_model(session):
 
     user_db = session.query(User).filter_by(name="Ezequiel").first()
 
-    user_model = user_db.to_user_Model()
+    user_model = user_db.to_user_model()
 
     assert isinstance(user_model, UserModel)
 
@@ -264,14 +265,14 @@ def test_has_overlapped_reserves_true():
 
     reserve1 = Reserve(
         user=user, 
-        lodgment_id="232344",
+        accommodation_id="232344",
         start_date=(date.today() - relativedelta(days=10)),
         end_date=date.today(),
         cost=200)
     
     reserve2 = Reserve(
         user=user, 
-        lodgment_id="55555",
+        accommodation_id="55555",
         start_date=(date.today() - relativedelta(days=5)),
         end_date=date.today(),
         cost=200)
@@ -279,3 +280,91 @@ def test_has_overlapped_reserves_true():
     user.reserves = [reserve1, reserve2]
 
     assert user.has_overlapped_reserves() is True
+
+def test_when_delete_user_delete_reserves(session):
+    birthdate = date.today() - relativedelta(years=25)
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=birthdate
+    )
+
+    reserve1 = Reserve(
+        user=user, 
+        accommodation_id="232344",
+        start_date=(date.today() - relativedelta(days=10)),
+        end_date=date.today(),
+        cost=200)
+    
+    reserve2 = Reserve(
+        user=user, 
+        accommodation_id="55555",
+        start_date=(date.today() - relativedelta(days=5)),
+        end_date=date.today(),
+        cost=200)
+    
+    user.reserves = [reserve1, reserve2]
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+    reserve_db1 = session.query(Reserve).filter_by(user_id=user_db.id).first()
+
+    assert reserve_db1.accommodation_id == "232344"
+
+    session.delete(user_db)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+    reserve_db1 = session.query(Reserve).filter_by(accommodation_id=232344).first()
+
+    assert user_db is None
+    assert reserve_db1 is None
+
+def test_when_delete_user_delete_rates(session):
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    session.add(user)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+
+
+    rateData1 = RateData(
+        user_rate=user_db,
+        accommodation_rate_id="asdf",
+        rate_score=3,
+        commentary="Medium",
+    )
+
+    rateData2 = RateData(
+        user_rate=user_db,
+        accommodation_rate_id="asdf",
+        rate_score=3,
+        commentary="Medium",
+    )
+    
+    session.add_all([rateData1, rateData2])
+    session.commit()
+
+    rateData_db1 = session.query(RateData).filter_by(accommodation_rate_id="asdf").first()
+
+    assert rateData_db1.accommodation_rate_id == "asdf"
+
+    session.delete(user_db)
+    session.commit()
+
+    user_db = session.query(User).filter_by(name="Ezequiel").first()
+    rateData_db1 = session.query(RateData).filter_by(accommodation_rate_id="asdf").first()
+
+    assert user_db is None
+    assert rateData_db1 is None

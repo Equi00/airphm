@@ -2,15 +2,15 @@ from datetime import date
 from sqlalchemy import Column, ForeignKey, String, Integer, Date
 from sqlalchemy.orm import relationship
 from databases.sql_database import PostgresBase
+from entities.user import User
 
 class RateData(PostgresBase):
     __tablename__ = "rate_data"
 
     id = Column(Integer, primary_key=True, index=True)
 
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, unique=True)
-    
-    user_rate = relationship("User", uselist=False)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_rate = relationship("User", back_populates="rates")
 
     accommodation_rate_id = Column(String, nullable=False)
 
