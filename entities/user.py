@@ -4,6 +4,10 @@ from databases.sql_database import PostgresBase
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
+from entities.accommodation import Accommodation
+from entities.rateData import RateData
+from entities.reserve import Reserve
+from exceptions.badRequestException import BadRequestException
 from models.userModel import FriendModel, FullUserModel, UserModel, UserResponse
 
 user_friends = Table(
@@ -51,9 +55,39 @@ class User(PostgresBase):
 
     password = Column(String, default="")
 
-    # lodgmentReserve TODO
+    #TODO test
+    def accommodation_reserve(self, accommodation_id: str, start_date: date, end_date: date, total_cost: int) -> None:
+        if not self._can_reserve(accommodation_id, total_cost):
+            raise BadRequestException(
+                "The user can't reserve this accommodation!"
+            )
 
-    # rateLodgment TODO
+        reserve = Reserve(
+            user=self,
+            accommodation_id=accommodation_id,
+            start_date=start_date,
+            end_date=end_date,
+            cost=total_cost
+        )
+
+        self.reserves.append(reserve)
+        self.balance -= reserve.cost
+
+    #TODO test
+    def rate_accommodation(self, accommodation: Accommodation, score: int, commentary: str) -> None:
+        if not self._can_rate_accommodation(accommodation.id):
+            raise BadRequestException(
+                "The user only can rate reserved accommodation!"
+            )
+
+        rate = RateData(
+            user_rate=self,
+            accommodation_rate_id=accommodation.id,
+            rate_score=score,
+            commentary=commentary
+        )
+
+        accommodation.add_score(rate)
 
     def recharge(self, cash: int):
         self.balance += cash
@@ -124,6 +158,10 @@ class User(PostgresBase):
         else: 
             return False
 
-    #def _can_reserve() TODO
-        
-    #def _can_rate_lodgment() TODO
+    #TODO test
+    def _can_reserve(self, accommodation_id: str, total_cost: int) -> bool:
+        return (self.balance >= total_cost) and not self._can_rate_accommodation(accommodation_id)
+
+    #TODO test 
+    def _can_rate_accommodation(self, accommodation_id: str) -> bool:
+        return any(r.accommodation_id == accommodation_id for r in self.reserves)
