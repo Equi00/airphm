@@ -2,7 +2,6 @@ from datetime import date
 from sqlalchemy import Column, ForeignKey, String, Integer, Date
 from sqlalchemy.orm import relationship
 from databases.sql_database import PostgresBase
-from entities.user import User
 
 class RateData(PostgresBase):
     __tablename__ = "rate_data"

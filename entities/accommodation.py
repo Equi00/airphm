@@ -97,14 +97,12 @@ class Accommodation(BaseModel, ABC):
             type=self.__class__.__name__
         )
     
-    #TODO test
     def add_score(self, rateData: RateData) -> None:
         if not rateData.is_valid():
             raise BadRequestException("Rate is invalid.")
         
         self.update_average_and_count(rateData.rate_score)
     
-    #TODO test
     def update_average_and_count(self, score: int) -> None:
         self.rate_average = ((self.rate_average * self.rate_count) + score) / (self.rate_count + 1)
         self.rate_count += 1

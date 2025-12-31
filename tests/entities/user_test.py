@@ -3,8 +3,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from entities.accommodation import Hut
 from entities.user import User
 from entities.rateData import RateData
+from exceptions.badRequestException import BadRequestException
 from models.userModel import UserModel, FriendModel, UserResponse, FullUserModel
 from entities.reserve import Reserve
 import pytest
@@ -368,3 +370,133 @@ def test_when_delete_user_delete_rates(session):
 
     assert user_db is None
     assert rateData_db1 is None
+
+def test_accommodation_reserve_success():
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=5000,
+        birthdate=date(2000, 6, 14)
+    )
+
+    user.accommodation_reserve(
+        accommodation_id="A1",
+        start_date=date.today(),
+        end_date=date.today() + relativedelta(days=3),
+        total_cost=2000
+    )
+
+    assert len(user.reserves) == 1
+    assert user.reserves[0].accommodation_id == "A1"
+    assert user.balance == 3000
+
+def test_accommodation_reserve_insufficient_balance():
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=1000,
+        birthdate=date(2000, 6, 14)
+    )
+
+    with pytest.raises(BadRequestException):
+        user.accommodation_reserve(
+            accommodation_id="A1",
+            start_date=date.today(),
+            end_date=date.today() + relativedelta(days=3),
+            total_cost=2000
+        )
+
+    assert len(user.reserves) == 0
+
+def test_accommodation_reserve_same_accommodation_twice():
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=5000,
+        birthdate=date(2000, 6, 14)
+    )
+
+    user.accommodation_reserve(
+        accommodation_id="A1",
+        start_date=date.today(),
+        end_date=date.today() + relativedelta(days=3),
+        total_cost=1000
+    )
+
+    with pytest.raises(BadRequestException):
+        user.accommodation_reserve(
+            accommodation_id="A1",
+            start_date=date.today(),
+            end_date=date.today() + relativedelta(days=5),
+            total_cost=1000
+        )
+
+def test_rate_accommodation_success():
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=5000,
+        birthdate=date(2000, 6, 14)
+    )
+
+    hut = Hut(
+        id="A1",
+        owner_id=1,
+        base_cost=1000,
+        name="Mountain Hut",
+        description="Nice",
+        capacity=2,
+        bedrooms=1,
+        bathrooms=1,
+        accommodation_detail="Detail",
+        other_aspects="Other",
+        cleaning_service=False,
+        address="Addr",
+        country="AR",
+        image_url="img"
+    )
+
+    user.accommodation_reserve(
+        accommodation_id="A1",
+        start_date=date.today(),
+        end_date=date.today() + relativedelta(days=3),
+        total_cost=1000
+    )
+
+    user.rate_accommodation(hut, score=4, commentary="Nice place")
+
+    assert hut.rate_count == 1
+    assert hut.rate_average == 4
+
+def test_rate_accommodation_not_reserved():
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=5000,
+        birthdate=date(2000, 6, 14)
+    )
+
+    hut = Hut(
+        id="A1",
+        owner_id=1,
+        base_cost=1000,
+        name="Mountain Hut",
+        description="Nice",
+        capacity=2,
+        bedrooms=1,
+        bathrooms=1,
+        accommodation_detail="Detail",
+        other_aspects="Other",
+        cleaning_service=False,
+        address="Addr",
+        country="AR",
+        image_url="img"
+    )
+
+    with pytest.raises(BadRequestException):
+        user.rate_accommodation(hut, score=5, commentary="Great!")

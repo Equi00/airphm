@@ -55,7 +55,6 @@ class User(PostgresBase):
 
     password = Column(String, default="")
 
-    #TODO test
     def accommodation_reserve(self, accommodation_id: str, start_date: date, end_date: date, total_cost: int) -> None:
         if not self._can_reserve(accommodation_id, total_cost):
             raise BadRequestException(
@@ -70,10 +69,8 @@ class User(PostgresBase):
             cost=total_cost
         )
 
-        self.reserves.append(reserve)
         self.balance -= reserve.cost
 
-    #TODO test
     def rate_accommodation(self, accommodation: Accommodation, score: int, commentary: str) -> None:
         if not self._can_rate_accommodation(accommodation.id):
             raise BadRequestException(
@@ -158,10 +155,8 @@ class User(PostgresBase):
         else: 
             return False
 
-    #TODO test
     def _can_reserve(self, accommodation_id: str, total_cost: int) -> bool:
         return (self.balance >= total_cost) and not self._can_rate_accommodation(accommodation_id)
 
-    #TODO test 
     def _can_rate_accommodation(self, accommodation_id: str) -> bool:
         return any(r.accommodation_id == accommodation_id for r in self.reserves)

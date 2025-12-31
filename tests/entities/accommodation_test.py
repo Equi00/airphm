@@ -8,7 +8,7 @@ from datetime import date
 from entities.rateData import RateData
 from entities.accommodation import Department, House, Hut
 from entities.user import User
-from entities.reserve import Reserve
+from exceptions.badRequestException import BadRequestException
 from models.accommodationModel import AccommodationDetailModel
 from models.reserveModel import ReserveModel
 
@@ -333,3 +333,124 @@ def test_to_detail_model_with_rates_and_reserves(session, session_postgres):
     saved_rate = acc_model.rates[0]
     assert saved_rate.user.name == user.name
     assert saved_rate.user.surname == user.surname
+
+def test_update_average_and_count_first_score():
+    hut = Hut(
+        owner_id=1,
+        base_cost=10000,
+        name="Mountain Hut",
+        description="Nice hut",
+        capacity=4,
+        bedrooms=2,
+        bathrooms=1,
+        accommodation_detail="Wood cabin",
+        other_aspects="Fireplace",
+        cleaning_service=True,
+        address="Hill 123",
+        country="Argentina",
+        image_url="img.jpg",
+        reserves=[],
+    )
+
+    hut.update_average_and_count(4)
+
+    assert hut.rate_average == 4
+    assert hut.rate_count == 1
+
+def test_update_average_and_count_multiple_scores():
+    hut = Hut(
+        owner_id=1,
+        base_cost=10000,
+        name="Mountain Hut",
+        description="Nice hut",
+        capacity=4,
+        bedrooms=2,
+        bathrooms=1,
+        accommodation_detail="Wood cabin",
+        other_aspects="Fireplace",
+        cleaning_service=True,
+        address="Hill 123",
+        country="Argentina",
+        image_url="img.jpg",
+        reserves=[],
+    )
+
+    hut.update_average_and_count(4)
+    hut.update_average_and_count(2)
+
+    assert hut.rate_count == 2
+    assert hut.rate_average == 3.0
+
+def test_add_score_valid_rate():
+    hut = Hut(
+        owner_id=1,
+        base_cost=10000,
+        name="Mountain Hut",
+        description="Nice hut",
+        capacity=4,
+        bedrooms=2,
+        bathrooms=1,
+        accommodation_detail="Wood cabin",
+        other_aspects="Fireplace",
+        cleaning_service=True,
+        address="Hill 123",
+        country="Argentina",
+        image_url="img.jpg",
+        reserves=[],
+    )
+
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    rate = RateData(
+        user_rate=user,
+        accommodation_rate_id="asdf",
+        rate_score=5,
+        commentary="Excellent",
+    )
+
+    hut.add_score(rate)
+
+    assert hut.rate_count == 1
+    assert hut.rate_average == 5
+
+def test_add_score_invalid_rate_raises_exception():
+    hut = Hut(
+        owner_id=1,
+        base_cost=10000,
+        name="Mountain Hut",
+        description="Nice hut",
+        capacity=4,
+        bedrooms=2,
+        bathrooms=1,
+        accommodation_detail="Wood cabin",
+        other_aspects="Fireplace",
+        cleaning_service=True,
+        address="Hill 123",
+        country="Argentina",
+        image_url="img.jpg",
+        reserves=[],
+    )
+
+    user = User(
+        name="Ezequiel",
+        surname="Oyola",
+        country="Argentina",
+        balance=300,
+        birthdate=date(2000, 6, 14)
+    )
+
+    rate = RateData(
+        user_rate=user,
+        accommodation_rate_id="asdf",
+        rate_score=9999,
+        commentary="asdfsda",
+    )
+
+    with pytest.raises(BadRequestException):
+        hut.add_score(rate)

@@ -1,16 +1,19 @@
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from databases.sql_database import PostgresBase
-
 from datetime import date
 
-from entities.user import User
 from models.reserveModel import ReserveModel
+
+if TYPE_CHECKING:
+    from entities.user import User
+
 
 class Reserve(PostgresBase):
     __tablename__ = "reserves"
 
-    def __init__(self, user: User, accommodation_id: str, start_date: date, end_date: date, cost: int):
+    def __init__(self, user: "User", accommodation_id: str, start_date: date, end_date: date, cost: int):
         self.user = user
         self.accommodation_id = accommodation_id
         self.start_date = start_date
