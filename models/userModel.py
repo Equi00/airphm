@@ -47,4 +47,3 @@ class FullUserModel(BaseModel): # this will also be used for update the user
 class UserResponse(BaseModel):
     id: int
     name: str
-

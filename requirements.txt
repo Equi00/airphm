@@ -7,3 +7,4 @@ sqlalchemy
 typing
 uuid
 pymongo
+neomodel

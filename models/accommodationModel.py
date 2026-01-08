@@ -26,3 +26,16 @@ class AccommodationDetailModel(BaseModel):
     rate_count: int
     commission: float
     type: str
+
+class AccommodationCacheModel(BaseModel):
+    id: str 
+    name: str 
+    description: str 
+    base_cost: int 
+    capacity: int 
+    address: str 
+    country: str 
+    image_url: str 
+    rate_average: float 
+    rate_count: int 
+    type: str 
